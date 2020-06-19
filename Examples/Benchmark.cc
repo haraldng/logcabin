@@ -29,6 +29,7 @@
 #include <ctime>
 #include <getopt.h>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <unistd.h>
 
@@ -57,7 +58,8 @@ class OptionParser {
         , size(1024)
         , writers(1)
         , totalWrites(1000)
-        , timeout(parseNonNegativeDuration("30s"))
+        , resultsFile("./results.out")
+        //, timeout(parseNonNegativeDuration("30s"))
     {
         while (true) {
             static struct option longOptions[] = {
@@ -65,7 +67,8 @@ class OptionParser {
                {"help",  no_argument, NULL, 'h'},
                {"size",  required_argument, NULL, 's'},
                {"threads",  required_argument, NULL, 't'},
-               {"timeout",  required_argument, NULL, 'd'},
+               {"resultsFile", required_argument, NULL, 'f'},
+               //{"timeout",  required_argument, NULL, 'd'},
                {"writes",  required_argument, NULL, 'w'},
                {"verbose",  no_argument, NULL, 'v'},
                {"verbosity",  required_argument, NULL, 256},
@@ -81,8 +84,13 @@ class OptionParser {
                 case 'c':
                     cluster = optarg;
                     break;
+                /*
                 case 'd':
                     timeout = parseNonNegativeDuration(optarg);
+                    break;
+                */
+                case 'f':
+                    resultsFile = optarg;
                     break;
                 case 'h':
                     usage();
@@ -189,7 +197,8 @@ class OptionParser {
     uint64_t size;
     uint64_t writers;
     uint64_t totalWrites;
-    uint64_t timeout;
+    std::string resultsFile;
+    //uint64_t timeout;
 };
 
 /**
@@ -213,8 +222,6 @@ void
 writeThreadMain(uint64_t id,
                 const OptionParser& options,
                 Tree tree,
-                const std::string& key,
-                const std::string& value,
                 std::atomic<bool>& exit,
                 uint64_t& writesDone)
 {
@@ -222,9 +229,13 @@ writeThreadMain(uint64_t id,
     // assign any odd leftover writes in a balanced way
     if (options.totalWrites - numWrites * options.writers > id)
         numWrites += 1;
+
     for (uint64_t i = 0; i < numWrites; ++i) {
         if (exit)
             break;
+
+        std::string key = std::to_string(id * numWrites + i);
+        std::string value = key;
         tree.writeEx(key, value);
         writesDone = i + 1;
     }
@@ -233,13 +244,15 @@ writeThreadMain(uint64_t id,
 /**
  * Return the time since the Unix epoch in nanoseconds.
  */
-uint64_t timeNanos()
+/*
+uint64_t timeMillis()
 {
     struct timespec now;
     int r = clock_gettime(CLOCK_REALTIME, &now);
     assert(r == 0);
-    return uint64_t(now.tv_sec) * 1000 * 1000 * 1000 + uint64_t(now.tv_nsec);
+    return uint64_t(now.tv_sec) * 1000 * 1000  + uint64_t(now.tv_msec);
 }
+*/
 
 /**
  * Main function for the timer thread, whose job is to wait until a particular
@@ -251,6 +264,7 @@ uint64_t timeNanos()
  *      soonish. Also, if the timeout elapses, the timer thread will set this
  *      to true and exit.
  */
+/*
 void
 timerThreadMain(uint64_t timeout, std::atomic<bool>& exit)
 {
@@ -262,7 +276,7 @@ timerThreadMain(uint64_t timeout, std::atomic<bool>& exit)
         }
     }
 }
-
+*/
 } // anonymous namespace
 
 int
@@ -277,36 +291,28 @@ main(int argc, char** argv)
         Cluster cluster = Cluster(options.cluster);
         Tree tree = cluster.getTree();
 
-        std::string key("/bench");
-        std::string value(options.size, 'v');
-
-        uint64_t startNanos = timeNanos();
+        std::ofstream myfile;
+        std::string filePath = options.resultsFile;
+        auto startTime = std::chrono::high_resolution_clock::now();
         std::atomic<bool> exit(false);
         std::vector<uint64_t> writesDonePerThread(options.writers);
         uint64_t totalWritesDone = 0;
         std::vector<std::thread> threads;
-        std::thread timer(timerThreadMain, options.timeout, std::ref(exit));
+        //std::thread timer(timerThreadMain, options.timeout, std::ref(exit));
         for (uint64_t i = 0; i < options.writers; ++i) {
             threads.emplace_back(writeThreadMain, i, std::ref(options),
-                                 tree, std::ref(key), std::ref(value),
-                                 std::ref(exit),
-                                 std::ref(writesDonePerThread.at(i)));
+                                 tree, std::ref(exit), std::ref(writesDonePerThread.at(i)));
         }
         for (uint64_t i = 0; i < options.writers; ++i) {
             threads.at(i).join();
             totalWritesDone += writesDonePerThread.at(i);
         }
-        uint64_t endNanos = timeNanos();
+        auto endTime = std::chrono::high_resolution_clock::now();
         exit = true;
-        timer.join();
-
-        tree.removeFile(key);
-        std::cout << "Benchmark took "
-                  << static_cast<double>(endNanos - startNanos) / 1e6
-                  << " ms to write "
-                  << totalWritesDone
-                  << " objects"
-                  << std::endl;
+        //timer.join();
+        myfile.open(filePath, std::ios_base::app);
+        myfile << std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count() << std::endl;
+        myfile.close();
         return 0;
 
     } catch (const LogCabin::Client::Exception& e) {
