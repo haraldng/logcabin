@@ -52,7 +52,7 @@ opts.AddVariables(
     ("AS", "Assembler"),
     ("LIBPATH", "Library paths that are passed to the linker", []),
     ("LINK", "Linker"),
-    ("BUILDTYPE", "Build type (RELEASE or DEBUG)", "DEBUG"),
+    ("BUILDTYPE", "Build type (RELEASE or DEBUG)", "RELEASE"),
     ("VERBOSE", "Show full build information (0 or 1)", "0"),
     ("NUMCPUS", "Number of CPUs to use for build (0 means auto).", "0"),
     ("VERSION", "Override version string", _VERSION),

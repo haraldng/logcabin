@@ -7,14 +7,15 @@ set -e
 
 tmpdir=$(mktemp -d)
 results_dir="./results"
-NUM_RUNS=2
+NUM_RUNS=30
 
 # experiment params
 entry_size=8	# ~ u64 entry
-concurrent_proposals=1 
-num_proposals=1000 
+concurrent_proposals=1000 
+num_proposals=1000000 
 election_timeout=1000
 leader_hb_period=100
+rpcFailureBackoffMilliseconds=500	# should be election_timeout/2
 
 verbosity=ERROR
 
@@ -27,6 +28,7 @@ storagePath=$tmpdir
 logPolicy = $verbosity
 electionTimeoutMilliseconds=$election_timeout
 heartbeatPeriodMilliseconds=$leader_hb_period
+rpcFailureBackoffMilliseconds=$rpcFailureBackoffMilliseconds
 storageOpenSegments = 1
 snapshotRatio=5000000
 snapshotMinLogSize=500000000
@@ -39,6 +41,7 @@ storagePath=$tmpdir
 logPolicy = $verbosity
 electionTimeoutMilliseconds=$election_timeout
 heartbeatPeriodMilliseconds=$leader_hb_period
+rpcFailureBackoffMilliseconds=$rpcFailureBackoffMilliseconds
 storageOpenSegments = 1
 snapshotRatio=5000000
 snapshotMinLogSize=500000000
@@ -51,6 +54,7 @@ storagePath=$tmpdir
 logPolicy = $verbosity
 electionTimeoutMilliseconds=$election_timeout
 heartbeatPeriodMilliseconds=$leader_hb_period
+rpcFailureBackoffMilliseconds=$rpcFailureBackoffMilliseconds
 storageOpenSegments = 1
 snapshotRatio=5000000
 snapshotMinLogSize=500000000
