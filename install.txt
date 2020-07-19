@@ -1,0 +1,97 @@
+GCC 7.5: https://askubuntu.com/questions/1087150/install-gcc-5-on-ubuntu-18-04
+Scons 2.3
+Protobuf 2.6.1
+cryptopp 8.2.0: sudo curl https://www.cryptopp.com/cryptopp820.zip -o ./cryptopp820.zip
+
+don't place logcabin in mounted volume to prevent read write problems.
+
+
+------------------------------------------------------------------------------
+
+cat run-1593002947456/logcabin_num_proposals_10000000_concurrent_proposals_10000.out
+1443129
+
+------------------------------------------------------------------------------
+
+
+https://github.com/logcabin/logcabin/blob/master/sample.conf#L142	// use tmpfs here?
+
+python /src/scons-2.3.6/script/scons	// build with scons
+alias scons=python /src/scons-2.3.6/script/scons	// alias to only call "scons"
+
+update-alternatives --config g++
+
+docker exec -it 543820f3ed12 bash
+cd /home/logcabin
+
+build/LogCabin --config /src/config/logcabin-1.conf --bootstrap
+build/LogCabin --config /src/config/logcabin-1.conf
+build/LogCabin --config /src/config/logcabin-2.conf
+build/LogCabin --config /src/config/logcabin-3.conf
+
+ALLSERVERS=127.0.0.1:5254,127.0.0.1:5255,127.0.0.1:5256
+build/Examples/Reconfigure --cluster=$ALLSERVERS set 127.0.0.1:5254 127.0.0.1:5255 127.0.0.1:5256
+build/Examples/HelloWorld --cluster=$ALLSERVERS
+build/Examples/Benchmark --cluster=$ALLSERVERS
+
+echo -n hello | build/Examples/TreeOps --cluster=$ALLSERVERS write /world
+build/Examples/TreeOps --cluster=$ALLSERVERS dump
+
+Usage: ./build/Client/ServerControl [options] <command> [<args>]
+
+Commands:
+  info get                     Print server ID and addresses.
+  debug filename get           Print the server's debug log filename.
+  debug filename set <path>    Change the server's debug log filename.
+  debug policy get             Print the server's debug log policy.
+  debug policy set <value>     Change the server's debug log policy.
+  debug rotate                 Rotate the server's debug log file.
+  snapshot inhibit get         Print the remaining time for which the server
+                               was prevented from taking snapshots.
+  snapshot inhibit set [<time>]  Abort the server's current snapshot if one is
+                                 in progress, and disallow the server from
+                                 starting automated snapshots for the given
+                                 duration [default: 1week].
+  snapshot inhibit clear       Allow the server to take snapshots normally.
+  snapshot start               Begin taking a snapshot if none is in progress.
+  snapshot stop                Abort the current snapshot if one is in
+                               progress.
+  snapshot restart             Abort the current snapshot if one is in
+                               progress, then begin taking a new snapshot.
+  stats get                    Print detailed server metrics.
+  stats dump                   Write detailed server metrics to server's debug
+                               log.
+
+Options:
+  -h, --help                   Print this usage information and exit
+  -s <addresses>, --server=<addresses>  Network addresses of the target
+                                        LogCabin server, comma-separated
+                                        [default: localhost:5254]
+  -t <time>, --timeout=<time>  Set timeout for the operation
+                               (0 means wait forever) [default: 0s]
+  -v, --verbose                Same as --verbosity=VERBOSE
+  --verbosity=<policy>         Set which log messages are shown.
+                               Comma-separated LEVEL or PATTERN@LEVEL rules.
+                               Levels: SILENT, ERROR, WARNING, NOTICE, VERBOSE.
+                               Patterns match filename prefixes or suffixes.
+                               Example: Client@NOTICE,Test.cc@SILENT,VERBOSE.
+------------------------------------------------------------------------------------------------
+
+Usage: ./LogCabin [options]
+Options:
+  --bootstrap                  Write a cluster configuration into the very
+                               first server's log and exit. This must only
+                               be run once on a single server in each cluster.
+  -c <file>, --config=<file>   Set the path to the configuration file
+                               [default: logcabin.conf]
+  -d, --daemon                 Detach and run in the background
+                               (requires --log)
+  -h, --help                   Print this usage information
+  -l <file>, --log=<file>      Write debug logs to <file> instead of stderr
+  -p <file>, --pidfile=<file>  Write process ID to <file>
+  -t, --test                   Check the configuration file for basic errors
+                               and exit
+
+Signals:
+  SIGUSR1                      Dump ServerStats to debug log (experimental)
+  SIGUSR2                      Reopen the debug log file

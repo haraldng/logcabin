@@ -11,11 +11,11 @@ NUM_RUNS=30
 
 # experiment params
 entry_size=8	# ~ u64 entry
-concurrent_proposals=1000 
+concurrent_proposals=10000 
 num_proposals=10000000 # TODO
-election_timeout=1000
+election_timeout=5000
 leader_hb_period=100
-rpcFailureBackoffMilliseconds=500	# should be election_timeout/2
+rpcFailureBackoffMilliseconds=2500	# should be election_timeout/2
 
 verbosity=ERROR
 
