@@ -32,6 +32,7 @@ rpcFailureBackoffMilliseconds=$rpcFailureBackoffMilliseconds
 storageOpenSegments = 1
 snapshotRatio=5000000
 snapshotMinLogSize=500000000
+# maxLogEntriesPerRequest = 10000000
 EOF
 
 cat >logcabin-2.conf << EOF
@@ -45,6 +46,7 @@ rpcFailureBackoffMilliseconds=$rpcFailureBackoffMilliseconds
 storageOpenSegments = 1
 snapshotRatio=5000000
 snapshotMinLogSize=500000000
+# maxLogEntriesPerRequest = 10000000
 EOF
 
 cat >logcabin-3.conf << EOF
@@ -58,6 +60,7 @@ rpcFailureBackoffMilliseconds=$rpcFailureBackoffMilliseconds
 storageOpenSegments = 1
 snapshotRatio=5000000
 snapshotMinLogSize=500000000
+# maxLogEntriesPerRequest = 10000000
 EOF
 
 path=$results_dir/run-${run_id}

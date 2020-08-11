@@ -5,6 +5,15 @@ cryptopp 8.2.0: sudo curl https://www.cryptopp.com/cryptopp820.zip -o ./cryptopp
 
 don't place logcabin in mounted volume to prevent read write problems.
 
+-------------------------- tmpfs -------------------------------------
+
+https://man7.org/linux/man-pages/man5/tmpfs.5.html
+https://www.howtoforge.com/storing-files-directories-in-memory-with-tmpfs
+
+mkdir /tmpfs-logcabin
+chmod 777 /tmpfs-logcabin
+mount -t tmpfs -o size=10G,mode=0777 tmpfs /tmpfs-logcabin
+
 
 ------------------------------------------------------------------------------
 
